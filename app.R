@@ -315,38 +315,7 @@ shinyApp(
     #               CARGANDO LA BASE AL TEMPORAL               #
     ############################################################     
     
-    observeEvent(input$ejecutar01,{
-      
-      ############################################
-      #          SUBIENDO DATA A AWS             #
-      ############################################
-      
-      library("DBI")
-      library("RMySQL")
-      
-      withProgress(message = 'Subiendo a AWS', value = 0, {
-        
-        for (i in 1:1) {
-          if(i==1) {
-            ############################################################       
-            #                  RECALCULANDO VARIABLES                  #
-            ############################################################  
-            db2 <- dbConnect(RMySQL::MySQL(),
-                             dbname = "movil",
-                             host = "database-movil.catjbiapkswk.us-east-1.rds.amazonaws.com",
-                             user = "user_movil",
-                             password = rstudioapi::askForPassword("Database password"),
-                             Port = 3306)
-            dbExecute(db2, "TRUNCATE TABLE OUTBOUND_MIGRACION")
-            dbWriteTable(conn = db2,"OUTBOUND_MIGRACION", value = datos2, append = TRUE, row.names = FALSE)
-            
-            incProgress(1/1, detail = paste("parte ", i))
-            
-            Sys.sleep(0.1)
-          }
-        }
-      })
-    })
+    
     
     ##################################################
     #               GUARDANDO ARCHIVO                #
@@ -376,6 +345,41 @@ shinyApp(
       
     })
     #fin de datasetInput1
+    
+    observeEvent(input$ejecutar01,{
+      
+      ############################################
+      #          SUBIENDO DATA A AWS             #
+      ############################################
+      
+      library("DBI")
+      library("RMySQL")
+      
+      df <- as.data.frame(datasetInput1())
+      
+      withProgress(message = 'Subiendo a AWS', value = 0, {
+        
+        for (i in 1:1) {
+          if(i==1) {
+            ############################################################       
+            #                  RECALCULANDO VARIABLES                  #
+            ############################################################  
+            db2 <- dbConnect(RMySQL::MySQL(),
+                             dbname = "movil",
+                             host = "database-movil.catjbiapkswk.us-east-1.rds.amazonaws.com",
+                             user = "user_movil",
+                             password = rstudioapi::askForPassword("Database password"),
+                             Port = 3306)
+            dbExecute(db2, "TRUNCATE TABLE OUTBOUND_MIGRACION")
+            dbWriteTable(conn = db2,"OUTBOUND_MIGRACION", value = df, append = TRUE, row.names = FALSE)
+            
+            incProgress(1/1, detail = paste("parte ", i))
+            
+            Sys.sleep(0.1)
+          }
+        }
+      })
+    })
     
     datasetInput2 <- reactive({
       
@@ -822,14 +826,12 @@ shinyApp(
     
     output$downloadData <- downloadHandler(
       filename = function() {
-        paste("FC_ENTEL_MIGRACIONES", ".csv", sep = "")
+        paste("FC_BASE_GESTIONAR", ".csv", sep = "")
       },
       content = function(file) {
         write.csv(datasetInput7(), file, row.names = FALSE)
       }
-      
-      
-      
+ 
     )
     
     ##################################################
